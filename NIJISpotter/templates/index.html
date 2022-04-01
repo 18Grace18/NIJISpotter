@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>NijisanjiSpotter</title>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css">
+        <link rel="icon" href="https://styles.redditmedia.com/t5_2ef8gf/styles/communityIcon_kuo9869ila761.jpg">
+        <link rel="stylesheet" href="../static/css/style.css">
+    </head>
+    <body>
+        <div class="nijisanji">
+            <img class="img-fluid col-md-6 offset-md-3" src="../static/img/1200px-Nijisanji_Logo.png" alt="logo" width="500">.
+        </div>
+        <form class="col-md-6 offset-md-3 text-center" method="GET" action="{{ url_for('search') }}">
+        <div class="searchbox">
+            <input type="text" class="form-control" name="keyword" placeholder="what are you looking for?">
+            <button type="submit" class="searchbtn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        </form>
+    </body>
+</html>

@@ -1,0 +1,136 @@
+POST /livers/_close #close index before putting in settings (cannot be searched)
+POST /livers/_open #open index after putting in settings (now search is available)
+DELETE livers #delete index
+
+#test various searching
+GET livers
+
+GET livers/_analyze?filter_path=tokens.token
+{
+  "tokenizer": "pattern",
+  "text": "friendly and easy-going kanae"
+}
+
+GET /_analyze
+{
+  "tokenizer": "standard",
+  "filter": [ "stop" ],
+  "text": "the quick brown fox jumps over a tree"
+}
+
+
+GET livers/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "high school student",
+      "type": "most_fields", #calculated from the combination of all the matching fields
+      "fields": ["firstname", "lastname", "profile"],
+      "fuzziness": "AUTO", #handle typos
+      "analyzer": "my_analyzer", #using the analyzer configured from elasticsearch/kibana
+      "operator": "or" #either match one of the fields
+    }
+  }
+}
+
+#scoring rank model
+PUT livers/_settings
+{
+  "settings": {
+    "similarity": {
+      "scripted_tfidf": {
+        "type": "scripted",
+        "weight_script": {
+          "source": "double idf = Math.log((field.docCount+1.0)/(term.docFreq+1.0)) + 1.0; return query.boost * idf;"
+        },
+        "script": {
+          "source": "double tf = Math.sqrt(doc.freq); double norm = 1/Math.sqrt(doc.length); return weight * tf * norm;"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "field": {
+        "type": "text",
+        "similarity": "scripted_tfidf"
+      }
+    }
+  }
+}
+
+#stemming
+PUT /livers/_settings
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+       "stemmer_test" : {
+          "type" : "stemmer",
+          "name" : "english"
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "stemmer_test"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "description": {
+        "type": "text",
+        "analyzer": "my_analyzer"
+      }
+    }
+  }
+}
+
+#synonyms
+PUT /livers/_settings
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_test": {
+          "type": "synonym",
+          "synonyms": [
+            "strawberry, strawberries",
+            "valz, VALZ, waltz => VΔLZ",
+            "broadcast, broadcasts",
+            "covers, cover",
+            "chit-chat, chat, chatting",
+            "livers, liver",
+            "laid-back, easy-going",
+            "introverted, introvert",
+            "cheeky, brazen",
+            "interested, curious",
+            "captivating, charm, charming, charm point, charming point"
+            ]
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_test"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "description": {
+        "type": "text",
+        "analyzer": "my_analyzer"
+      }
+    }
+  }
+}
